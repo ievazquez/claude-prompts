@@ -38,7 +38,7 @@ def p(d, t):
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/clean-code-expert.md "Refactor this function: $(cat utils.py)"
+claude "@clean-code-expert Refactor this Python function to follow clean code principles and PEP 8"
 ```
 
 **✅ Expected Output:**
@@ -74,25 +74,42 @@ def get_eligible_user_names(users: List[UserData]) -> List[str]:
 * **Scenario:** A 10-year-old PHP 5 codebase for billing needs to be modernized without disrupting daily operations.
 * **The Problem:** Outdated PHP syntax, no ORM, raw SQL queries with SQL injection vulnerabilities, and tightly coupled code.
 
-**📝 Input Text:**
-```
-Analyze our billing_processor.php file. Plan a Strangler Fig migration to PHP 8
-with Laravel. Identify the first module to extract and create a migration plan
-with zero downtime requirements.
+**📝 Input Code:**
+```php
+<?php
+function get_user($id) {
+    $conn = mysql_connect("localhost", "root", "");
+    mysql_select_db("users", $conn);
+    $result = mysql_query("SELECT * FROM users WHERE id = " . $id);
+    $row = mysql_fetch_array($result);
+    mysql_close($conn);
+    return $row;
+}
+?>
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/legacy-modernizer.md "$(cat billing_processor.php)" \
-  --context "Target: PHP 8 + Laravel, Zero downtime required"
+claude "@legacy-modernizer Migrate this PHP 5 code to PHP 8 with Laravel best practices"
 ```
 
-**✅ Expected Output:** A phased migration plan including:
-- Anti-corruption layer design
-- Module extraction priority (payments → invoices → reports)
-- Database abstraction strategy
-- Parallel run testing approach
-- Rollback procedures for each phase
+**✅ Expected Output:**
+```php
+<?php
+
+namespace App\Repositories;
+
+use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+class UserRepository
+{
+    public function find(int $id): User
+    {
+        return User::findOrFail($id);
+    }
+}
+```
 
 ---
 
@@ -111,7 +128,7 @@ and product information. If you don't know something, just say so.
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/prompt-engineer.md "Optimize this prompt for consistency and token efficiency: $(cat current_prompt.txt)"
+claude "@prompt-engineer Optimize this customer support prompt for consistency and token efficiency"
 ```
 
 **✅ Expected Output:**
@@ -147,18 +164,19 @@ Role: Customer Support Agent for TechStore
 * **Scenario:** A Node.js application needs to be containerized for production deployment.
 * **The Problem:** Current Docker image is 1.2GB, runs as root, and has no layer caching optimization.
 
-**📝 Input Context:**
-```
-Containerize a Node.js Express API (v18) with:
-- Production dependencies only
-- Non-root user
-- Multi-stage build
-- Optimized layer caching
+**📝 Input Dockerfile:**
+```dockerfile
+FROM node:18
+WORKDIR /app
+COPY . .
+RUN npm install
+EXPOSE 3000
+CMD ["node", "server.js"]
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/docker-specialist.md "Create production Dockerfile for Node.js 18 Express API with security best practices"
+claude "@docker-specialist Optimize this Dockerfile for production with security best practices"
 ```
 
 **✅ Expected Output:**
@@ -206,7 +224,7 @@ Design REST endpoints for order management:
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/api-designer.md "Design REST API for order management with pagination, filtering, error handling, and rate limiting"
+claude "@api-designer Design REST API for order management with pagination, filtering, and rate limiting"
 ```
 
 **✅ Expected Output (OpenAPI Snippet):**
@@ -262,35 +280,40 @@ paths:
 
 **📝 Input Architecture:**
 ```
-Single PostgreSQL database handling:
-- 10K bids/second
-- User sessions
-- Auction state
-- Analytics logging
-All services communicate via synchronous REST calls.
+Current design:
+- Single PostgreSQL database for all data
+- 10K bids/second expected load
+- Synchronous REST calls between all services
+- No caching layer
+- User sessions stored in database
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/arquitect-reviewer.md "Review this architecture for 10K bids/sec real-time bidding platform: $(cat architecture.md)"
+claude "@arquitect-reviewer Review this architecture for a 10K bids/sec real-time bidding platform"
 ```
 
 **✅ Expected Output:**
-```
-## Executive Summary: ❌ FAIL
+```markdown
+## Architecture Review: Real-Time Bidding Platform
 
-### Critical Risks (Severity: HIGH)
-1. **SPOF**: Single PostgreSQL instance
-   - Impact: Total system failure
-   - Recommendation: Implement read replicas + connection pooling
+### Overall Assessment: ❌ CRITICAL ISSUES FOUND
 
-2. **Scalability**: REST for 10K/sec bidding
-   - Impact: Latency spikes, timeouts
-   - Recommendation: WebSockets for real-time + message queue (Kafka)
+### Risk Analysis
 
-3. **Data Strategy**: Mixed OLTP/OLAP workloads
-   - Impact: Query contention, degraded performance
-   - Recommendation: Separate analytics to ClickHouse/TimescaleDB
+| Issue | Severity | Impact |
+|-------|----------|--------|
+| Single PostgreSQL | CRITICAL | Total system failure on DB outage |
+| Sync REST at 10K/sec | HIGH | Cascading latency, timeouts |
+| No caching | HIGH | Unnecessary DB load |
+| Sessions in DB | MEDIUM | Performance degradation |
+
+### Recommendations
+
+1. **Database**: Read replicas + PgBouncer connection pooling
+2. **Communication**: WebSockets for bidding, Kafka for events
+3. **Caching**: Redis for sessions and hot data
+4. **Analytics**: Separate to ClickHouse/TimescaleDB
 ```
 
 ---
@@ -308,7 +331,7 @@ Add dark mode support to the web application
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/task-manager.md "Break down: Add dark mode support to React web app with existing Tailwind CSS"
+claude "@task-manager Break down this feature into sprint tasks: Add dark mode to React app with Tailwind CSS"
 ```
 
 **✅ Expected Output:**
@@ -344,13 +367,12 @@ claude -p agents/generic/task-manager.md "Break down: Add dark mode support to R
 Design schema for multi-tenant SaaS:
 - Tenant isolation
 - User management per tenant
-- Audit logging
-- Soft deletes
+- Shared tables approach
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/database-administrator.md "Design PostgreSQL schema for multi-tenant SaaS with row-level security"
+claude "@database-administrator Design PostgreSQL schema for multi-tenant SaaS with row-level security"
 ```
 
 **✅ Expected Output:**
@@ -398,11 +420,11 @@ Real-time dashboard updates
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/cloud-architect.md "Design serverless event processing on AWS: 10K events/min peak, 90-day retention, real-time dashboard"
+claude "@cloud-architect Design serverless event processing on AWS: 10K events/min peak, 90-day retention"
 ```
 
 **✅ Expected Output:**
-```
+```markdown
 ## Serverless Event Processing Architecture
 
 ### Components
@@ -440,7 +462,7 @@ Current pain: Long-lived branches, merge conflicts
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/git-workflow-manager.md "Design Git workflow for 8-person team with 2-week sprints and dev/staging/prod environments"
+claude "@git-workflow-manager Design Git workflow for 8-person team with 2-week sprints"
 ```
 
 **✅ Expected Output:**
@@ -454,7 +476,7 @@ claude -p agents/generic/git-workflow-manager.md "Design Git workflow for 8-pers
 - `release/*` → Release candidates
 - `hotfix/*` → Production fixes
 
-### Branch Naming
+### Branch Naming Convention
 ```
 feature/JIRA-123-add-user-auth
 bugfix/JIRA-456-fix-login-error
@@ -488,14 +510,13 @@ Implement notification system:
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/fullstack-developer.md "Implement real-time notifications: Node.js WebSocket backend + React frontend"
+claude "@fullstack-developer Implement real-time notifications with Node.js WebSocket backend and React frontend"
 ```
 
 **✅ Expected Output:**
 
-Backend (Node.js):
+**Backend (Node.js):**
 ```javascript
-// notification.service.js
 const WebSocket = require('ws');
 
 class NotificationService {
@@ -512,9 +533,8 @@ class NotificationService {
 }
 ```
 
-Frontend (React):
+**Frontend (React):**
 ```typescript
-// useNotifications.ts
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -539,19 +559,18 @@ export function useNotifications() {
 * **Scenario:** Creating API documentation for a REST service.
 * **The Problem:** Existing docs are outdated and lack examples.
 
-**📝 Input Context:**
-```
-Document the /users endpoint:
-- GET /users - List users
-- POST /users - Create user
-- GET /users/:id - Get user
-- PUT /users/:id - Update user
-- DELETE /users/:id - Delete user
+**📝 Input Code:**
+```javascript
+app.get('/users', getUsers);
+app.post('/users', createUser);
+app.get('/users/:id', getUser);
+app.put('/users/:id', updateUser);
+app.delete('/users/:id', deleteUser);
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/documentation-engineer.md "Generate API docs for users CRUD endpoints with examples"
+claude "@documentation-engineer Generate API docs for these users CRUD endpoints with examples"
 ```
 
 **✅ Expected Output:**
@@ -593,23 +612,27 @@ curl -X GET "https://api.example.com/v1/users?page=1&limit=10" \
 * **The Problem:** No caching, sequential builds, unnecessary rebuilds.
 
 **📝 Input Context:**
-```
-Monorepo with:
-- 5 Node.js services
-- 3 React apps
-- Shared libraries
-- Current build time: 45 minutes
-- CI: GitHub Actions
+```yaml
+# Current slow workflow
+name: Build
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm run build
+      - run: npm test
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/generic/build-engineer.md "Optimize 45-min monorepo build: 5 Node services, 3 React apps, GitHub Actions"
+claude "@build-engineer Optimize this 45-min monorepo build for GitHub Actions"
 ```
 
 **✅ Expected Output:**
 ```yaml
-# Optimized GitHub Actions workflow
 name: Optimized Build
 
 on:
@@ -628,7 +651,6 @@ jobs:
           filters: |
             service-a: 'services/a/**'
             service-b: 'services/b/**'
-            shared: 'packages/shared/**'
 
   build:
     needs: detect-changes
@@ -640,7 +662,6 @@ jobs:
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-
       - run: npm ci --workspace=${{ matrix.service }}
       - run: npm run build --workspace=${{ matrix.service }}
 ```
@@ -676,7 +697,7 @@ def process_files(dir):
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/python/python-refactor.md "$(cat file_processor.py)"
+claude "@python-refactor Refactor this file processing script to modern Pythonic standards"
 ```
 
 **✅ Expected Output:**
@@ -727,19 +748,19 @@ def calculate_statistics(numbers):
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/python/python-optimizer.md "$(cat stats.py)"
+claude "@python-optimizer Optimize this statistics function for performance"
 ```
 
 **✅ Expected Output:**
 ```python
 import numpy as np
-from functools import lru_cache
 
 def calculate_statistics(numbers: np.ndarray) -> dict[str, float]:
     """Calculate mean and variance using vectorized NumPy operations."""
-    mean = np.mean(numbers)
-    variance = np.var(numbers)
-    return {"mean": float(mean), "variance": float(variance)}
+    return {
+        "mean": float(np.mean(numbers)),
+        "variance": float(np.var(numbers))
+    }
 ```
 
 ---
@@ -767,17 +788,17 @@ public List<String> processRecords(List<Record> records) {
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/java/java-optimizer.md "$(cat RecordProcessor.java)"
+claude "@java-optimizer Optimize this method to reduce GC pressure and improve throughput"
 ```
 
 **✅ Expected Output:**
 ```java
 public List<String> processRecords(List<Record> records) {
-    List<String> results = new ArrayList<>(records.size()); // Pre-size
-    StringBuilder sb = new StringBuilder(64); // Reusable buffer
+    List<String> results = new ArrayList<>(records.size());
+    StringBuilder sb = new StringBuilder(64);
 
     for (Record r : records) {
-        sb.setLength(0); // Reset instead of new allocation
+        sb.setLength(0);
         sb.append(r.getId())
           .append(": ")
           .append(r.getName())
@@ -798,18 +819,21 @@ public List<String> processRecords(List<Record> records) {
 * **Scenario:** Creating a REST endpoint with proper validation, error handling, and documentation.
 * **The Problem:** Need production-ready endpoint following Spring Boot 3 best practices.
 
-**📝 Input Requirements:**
-```
-Create a user registration endpoint with:
-- Input validation
-- Custom error responses
-- OpenAPI documentation
-- Service layer separation
+**📝 Input Code:**
+```java
+@PostMapping("/users")
+public User createUser(@RequestBody Map<String, String> data) {
+    User user = new User();
+    user.setEmail(data.get("email"));
+    user.setPassword(data.get("password"));
+    user.setName(data.get("name"));
+    return userRepo.save(user);
+}
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/java/spring-boot-engineer.md "Create user registration endpoint with validation and OpenAPI docs"
+claude "@spring-boot-engineer Refactor this endpoint with validation, error handling, and OpenAPI docs"
 ```
 
 **✅ Expected Output:**
@@ -853,18 +877,30 @@ public record UserRegistrationRequest(
 * **Scenario:** Designing a hexagonal architecture for an order processing system.
 * **The Problem:** Current monolithic design makes testing and scaling difficult.
 
-**📝 Input Requirements:**
-```
-Design order processing module with:
-- Hexagonal architecture
-- Domain-driven design
-- External payment gateway integration
-- Event publishing
+**📝 Input Code:**
+```java
+@Service
+public class OrderService {
+    @Autowired
+    private OrderRepository repo;
+    @Autowired
+    private PaymentGateway payment;
+    @Autowired
+    private EmailService email;
+
+    public Order createOrder(OrderDTO dto) {
+        Order order = new Order(dto);
+        repo.save(order);
+        payment.charge(order);
+        email.send(order);
+        return order;
+    }
+}
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/java/java-architect.md "Design hexagonal architecture for order processing with DDD"
+claude "@java-architect Refactor to hexagonal architecture with proper port/adapter separation"
 ```
 
 **✅ Expected Output:**
@@ -872,7 +908,6 @@ claude -p agents/backend/java/java-architect.md "Design hexagonal architecture f
 ## Hexagonal Architecture: Order Processing
 
 ### Package Structure
-```
 com.example.order/
 ├── domain/
 │   ├── model/          # Order, OrderLine, OrderStatus
@@ -892,26 +927,6 @@ com.example.order/
 └── config/             # Spring configuration
 ```
 
-### Domain Model
-```java
-@Entity
-public class Order {
-    @Id
-    private OrderId id;
-    private CustomerId customerId;
-    private List<OrderLine> lines;
-    private OrderStatus status;
-    private Money total;
-
-    public void place() {
-        validateOrderCanBePlaced();
-        this.status = OrderStatus.PLACED;
-        registerEvent(new OrderPlacedEvent(this));
-    }
-}
-```
-```
-
 ---
 
 ### golang-pro.md
@@ -920,18 +935,21 @@ public class Order {
 * **Scenario:** Implementing a concurrent worker pool for processing jobs.
 * **The Problem:** Need goroutine-safe implementation with proper cancellation and error handling.
 
-**📝 Input Requirements:**
-```
-Create a worker pool that:
-- Processes jobs concurrently with N workers
-- Supports context cancellation
-- Collects results and errors
-- Uses channels properly
+**📝 Input Code:**
+```go
+func processJobs(jobs []Job) []Result {
+    var results []Result
+    for _, job := range jobs {
+        result := job.Process()
+        results = append(results, result)
+    }
+    return results
+}
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/go/golang-pro.md "Create concurrent worker pool with context cancellation"
+claude "@golang-pro Implement concurrent worker pool with context cancellation and error handling"
 ```
 
 **✅ Expected Output:**
@@ -987,17 +1005,20 @@ func WorkerPool(ctx context.Context, workers int, jobs <-chan Job) <-chan Result
 * **Scenario:** Creating an API resource with proper transformation and pagination.
 * **The Problem:** Need clean API responses following Laravel conventions.
 
-**📝 Input Requirements:**
-```
-Create API resources for Order model with:
-- Nested product relationships
-- Conditional attribute loading
-- Pagination support
+**📝 Input Code:**
+```php
+public function index() {
+    $orders = DB::table('orders')
+        ->join('customers', 'orders.customer_id', '=', 'customers.id')
+        ->select('orders.*', 'customers.name')
+        ->get();
+    return response()->json($orders);
+}
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/php/laravel-specialist.md "Create Order API resource with nested relationships and pagination"
+claude "@laravel-specialist Refactor with API resources, eager loading, and pagination"
 ```
 
 **✅ Expected Output:**
@@ -1011,17 +1032,7 @@ class OrderResource extends JsonResource
             'status' => $this->status,
             'total' => $this->formatted_total,
             'created_at' => $this->created_at->toISOString(),
-
-            // Conditional loading
-            'products' => ProductResource::collection(
-                $this->whenLoaded('products')
-            ),
-
-            'customer' => new CustomerResource(
-                $this->whenLoaded('customer')
-            ),
-
-            // Include only when requested
+            'customer' => new CustomerResource($this->whenLoaded('customer')),
             $this->mergeWhen($request->include_metadata, [
                 'metadata' => $this->metadata,
             ]),
@@ -1029,11 +1040,11 @@ class OrderResource extends JsonResource
     }
 }
 
-// Controller usage
+// Controller
 public function index(Request $request): AnonymousPaginatedResourceCollection
 {
     $orders = Order::query()
-        ->with(['products', 'customer'])
+        ->with(['customer'])
         ->latest()
         ->paginate($request->per_page ?? 15);
 
@@ -1073,7 +1084,7 @@ public:
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/cpp/cpp-refactor.md "$(cat DataProcessor.cpp)"
+claude "@cpp-refactor Modernize this class with RAII, smart pointers, and C++20 features"
 ```
 
 **✅ Expected Output:**
@@ -1114,11 +1125,11 @@ public:
 **📝 Input Code:**
 ```perl
 sub process_logs {
-    my @lines = @_;  # Copy by value!
+    my @lines = @_;
     my @results;
 
     foreach my $line (@lines) {
-        if ($line =~ /ERROR: (.*)/) {  # Recompiles each iteration
+        if ($line =~ /ERROR: (.*)/) {
             push @results, $1;
         }
     }
@@ -1130,15 +1141,15 @@ sub process_logs {
 
 **💻 Command:**
 ```bash
-claude -p agents/backend/perl/perl-optimizer.md "$(cat log_processor.pl)"
+claude "@perl-optimizer Optimize this log processor for performance"
 ```
 
 **✅ Expected Output:**
 ```perl
-use constant ERROR_PATTERN => qr/ERROR: (.*)/o;  # Compile once
+use constant ERROR_PATTERN => qr/ERROR: (.*)/o;
 
 sub process_logs {
-    my $lines_ref = shift;  # Pass by reference
+    my $lines_ref = shift;
 
     # Schwartzian Transform for efficient sorting
     my @results =
@@ -1148,7 +1159,7 @@ sub process_logs {
         map  { $_ =~ ERROR_PATTERN ? $1 : () }
         @$lines_ref;
 
-    return \@results;  # Return reference
+    return \@results;
 }
 ```
 
@@ -1162,52 +1173,55 @@ sub process_logs {
 * **Scenario:** Security assessment of a web application's authentication system.
 * **The Problem:** Need to identify authentication vulnerabilities before production deployment.
 
-**📝 Input Scope:**
-```
-Test authentication system for:
-- SQL injection in login
-- Brute force protection
-- Session management
-- Password reset flow
+**📝 Input Code:**
+```python
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form['username']
+    password = request.form['password']
+    query = f"SELECT * FROM users WHERE username='{username}' AND password='{password}'"
+    user = db.execute(query).fetchone()
+    if user:
+        session['user_id'] = user['id']
+        return redirect('/dashboard')
+    return "Login failed"
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/quality/penetration-tester.md "Test auth system: login SQLi, brute force, sessions, password reset" \
-  --context "Target: https://staging.example.com, Scope: auth endpoints only"
+claude "@penetration-tester Analyze this login endpoint for security vulnerabilities"
 ```
 
 **✅ Expected Output:**
 ```markdown
-## Vulnerability Report: Authentication System
+## Vulnerability Report: Login Endpoint
 
-### Finding #1: SQL Injection in Login
-**Severity:** CRITICAL
-**CVSS:** 9.8
+### Finding #1: SQL Injection
+**Severity:** CRITICAL | **CVSS:** 9.8
 
-**Evidence:**
-POST /api/login
-Content-Type: application/json
+**Vulnerable Code:**
+```python
+query = f"SELECT * FROM users WHERE username='{username}'"
+```
 
-{"email": "admin'--", "password": "x"}
-
-Response: 200 OK (Authentication bypassed)
+**Proof of Concept:**
+```
+username: admin'--
+password: anything
+```
 
 **Impact:** Complete authentication bypass, database access
 
 **Remediation:**
-- Use parameterized queries
-- Implement input validation
-- Add WAF rules
+```python
+query = "SELECT * FROM users WHERE username = ? AND password = ?"
+user = db.execute(query, (username, hashed_password)).fetchone()
+```
 
-### Finding #2: Missing Rate Limiting
+### Finding #2: Plain Text Passwords
 **Severity:** HIGH
-**Evidence:** 10,000 login attempts executed without blocking
 
-**Remediation:**
-- Implement exponential backoff
-- Add CAPTCHA after 5 failures
-- Account lockout after 10 attempts
+**Remediation:** Use bcrypt or Argon2 for password hashing
 ```
 
 ---
@@ -1218,18 +1232,17 @@ Response: 200 OK (Authentication bypassed)
 * **Scenario:** Testing system resilience when a critical database replica fails.
 * **The Problem:** Unknown behavior during partial database failure in production.
 
-**📝 Input Experiment:**
+**📝 Input Requirements:**
 ```
-Design chaos experiment for:
-- PostgreSQL read replica failure
-- 25% of read traffic affected
-- Measure impact on API latency
-- Define rollback criteria
+System: E-commerce platform
+Component: PostgreSQL read replica
+Traffic: 25% of reads go to this replica
+SLA: 99.9% availability
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/quality/chaos-engineer.md "Design experiment: PostgreSQL replica failure, 25% traffic, measure latency"
+claude "@chaos-engineer Design chaos experiment for PostgreSQL replica failure with 25% traffic impact"
 ```
 
 **✅ Expected Output:**
@@ -1271,7 +1284,7 @@ route traffic to healthy replicas with <10% latency increase.
 
 **📝 Input Architecture:**
 ```
-Proposed: 15 microservices with:
+Proposed: 15 microservices
 - Synchronous REST between all services
 - Shared PostgreSQL database
 - No caching layer
@@ -1280,7 +1293,7 @@ Proposed: 15 microservices with:
 
 **💻 Command:**
 ```bash
-claude -p agents/quality/architect-reviewer.md "Review: 15 microservices, shared DB, sync REST, manual deploy"
+claude "@architect-reviewer Review this 15-microservice architecture with shared database"
 ```
 
 **✅ Expected Output:**
@@ -1300,14 +1313,12 @@ claude -p agents/quality/architect-reviewer.md "Review: 15 microservices, shared
 ### Critical Issues
 
 1. **Distributed Monolith Risk**
-   - 15 services sharing one database
-   - Tight coupling via direct calls
+   - 15 services sharing one database = tight coupling
    - **Action:** Define bounded contexts, separate data stores
 
 2. **Scalability Ceiling**
    - Sync calls create cascading latency
-   - No circuit breakers
-   - **Action:** Implement Saga pattern, add Resilience4j
+   - **Action:** Implement Saga pattern, add circuit breakers
 ```
 
 ---
@@ -1322,16 +1333,15 @@ claude -p agents/quality/architect-reviewer.md "Review: 15 microservices, shared
 
 **📝 Input Requirements:**
 ```
-Create GitHub Actions pipeline for Node.js with:
-- Testing on PR
-- Build and push Docker image
-- Deploy to Kubernetes staging on merge
-- Production deployment with approval
+Stack: Node.js 20
+Registry: Docker Hub
+Environments: staging, production
+Approval: Required for production
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/infrastructure/devops-engineer.md "Create GitHub Actions CI/CD: Node.js, Docker, K8s staging/prod with approvals"
+claude "@devops-engineer Create GitHub Actions CI/CD for Node.js with Docker and K8s deployment"
 ```
 
 **✅ Expected Output:**
@@ -1355,15 +1365,12 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-      - run: npm run lint
 
   build:
     needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v5
         with:
           push: true
@@ -1371,15 +1378,12 @@ jobs:
 
   deploy-staging:
     needs: build
-    runs-on: ubuntu-latest
     environment: staging
     steps:
-      - uses: azure/k8s-set-context@v3
       - run: kubectl set image deployment/app app=registry.io/app:${{ github.sha }}
 
   deploy-production:
     needs: deploy-staging
-    runs-on: ubuntu-latest
     environment:
       name: production
       url: https://app.example.com
@@ -1395,22 +1399,21 @@ jobs:
 * **Scenario:** Implementing blue-green deployment for a critical service.
 * **The Problem:** Current deployments cause brief downtime during releases.
 
-**📝 Input Requirements:**
+**📝 Input Context:**
 ```
-Implement blue-green deployment with:
-- Kubernetes ingress switching
-- Health check validation
-- Automatic rollback on failure
+Current: Rolling update with 30s downtime
+Target: Zero-downtime deployment
+Platform: Kubernetes
+Tool preference: Argo Rollouts
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/infrastructure/deployment-engineer.md "Implement blue-green deployment on Kubernetes with auto-rollback"
+claude "@deployment-engineer Implement blue-green deployment on Kubernetes with auto-rollback"
 ```
 
 **✅ Expected Output:**
 ```yaml
-# Blue-Green Deployment with Argo Rollouts
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
@@ -1456,7 +1459,7 @@ ALERT: Unusual database activity
 
 **💻 Command:**
 ```bash
-claude -p agents/infrastructure/incident-responder.md "Respond to: 500K user rows exported at 3AM by service_account_backup from internal IP"
+claude "@incident-responder Create response playbook for potential data exfiltration: 500K rows exported at 3AM"
 ```
 
 **✅ Expected Output:**
@@ -1494,24 +1497,21 @@ claude -p agents/infrastructure/incident-responder.md "Respond to: 500K user row
 
 **📝 Input Requirements:**
 ```
-Design AWS network for:
-- Primary: us-east-1
-- DR: us-west-2
-- Private subnets for application tier
-- Public subnets for load balancers
-- VPN to on-premise datacenter
+Primary: us-east-1
+DR: us-west-2
+Connectivity: VPN to on-premise
+Workloads: Web tier (public), App tier (private), DB tier (isolated)
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/infrastructure/network-engineer.md "Design multi-region AWS VPC: us-east-1 primary, us-west-2 DR, VPN to on-prem"
+claude "@network-engineer Design multi-region AWS VPC with DR and on-prem VPN connectivity"
 ```
 
 **✅ Expected Output:**
 ```hcl
-# Multi-Region VPC with Transit Gateway
 module "vpc_primary" {
-  source  = "terraform-aws-modules/vpc/aws"
+  source = "terraform-aws-modules/vpc/aws"
 
   name = "primary-vpc"
   cidr = "10.0.0.0/16"
@@ -1541,15 +1541,16 @@ resource "aws_ec2_transit_gateway" "main" {
 
 **📝 Input Requirements:**
 ```
-Design federated schema for:
-- User service (authentication, profiles)
+Services:
+- User service (auth, profiles)
 - Product service (catalog, inventory)
-- Order service (cart, checkout, history)
+- Order service (cart, checkout)
+Requirement: Cross-service queries like "user's orders with product details"
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/core/graphql-architect.md "Design federated GraphQL for: users, products, orders services"
+claude "@graphql-architect Design federated GraphQL schema for users, products, and orders services"
 ```
 
 **✅ Expected Output:**
@@ -1559,12 +1560,10 @@ type User @key(fields: "id") {
   id: ID!
   email: String!
   name: String!
-  createdAt: DateTime!
 }
 
 type Query {
   me: User @authenticated
-  user(id: ID!): User
 }
 
 # Product Subgraph
@@ -1581,12 +1580,11 @@ type Order @key(fields: "id") {
   user: User!
   items: [OrderItem!]!
   total: Money!
-  status: OrderStatus!
 }
 
 extend type User @key(fields: "id") {
   id: ID! @external
-  orders(first: Int, after: String): OrderConnection!
+  orders: [Order!]!
 }
 ```
 
@@ -1600,17 +1598,18 @@ extend type User @key(fields: "id") {
 
 **📝 Input Context:**
 ```
-Current monolith handles:
+Current monolith modules:
 - User management
 - Product listings
 - Order processing
 - Payment handling
 - Notifications
+Issues: Can't scale orders independently, deployments affect everything
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/core/microservices-architect.md "Decompose monolith: users, products, orders, payments, notifications"
+claude "@microservices-architect Create decomposition strategy for this e-commerce monolith"
 ```
 
 **✅ Expected Output:**
@@ -1622,7 +1621,7 @@ claude -p agents/core/microservices-architect.md "Decompose monolith: users, pro
 | Service | Responsibility | Data Store | Team |
 |---------|---------------|------------|------|
 | User | Auth, profiles | PostgreSQL | Platform |
-| Catalog | Products, search | Elasticsearch + PostgreSQL | Product |
+| Catalog | Products, search | Elasticsearch + PG | Product |
 | Order | Cart, checkout | PostgreSQL | Commerce |
 | Payment | Transactions | PostgreSQL (isolated) | Finance |
 | Notification | Email, SMS, push | Redis | Platform |
@@ -1633,10 +1632,10 @@ claude -p agents/core/microservices-architect.md "Decompose monolith: users, pro
 - **Saga Pattern:** Order → Payment → Inventory
 
 ### Migration Phases
-1. **Phase 1:** Extract User service
-2. **Phase 2:** Extract Notification service
-3. **Phase 3:** Extract Catalog with Strangler Fig
-4. **Phase 4:** Extract Order/Payment together
+1. Extract User service (2 weeks)
+2. Extract Notification service (1 week)
+3. Extract Catalog with Strangler Fig (4 weeks)
+4. Extract Order/Payment together (6 weeks)
 ```
 
 ---
@@ -1649,21 +1648,20 @@ claude -p agents/core/microservices-architect.md "Decompose monolith: users, pro
 
 **📝 Input Requirements:**
 ```
-Build WebSocket system for:
+Features needed:
 - Real-time cursor positions
 - Document change synchronization
 - Presence indicators (who's online)
-- Horizontal scaling across multiple servers
+- Must scale horizontally
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/core/websocket-engineer.md "Design WebSocket system for collaborative editor: cursors, sync, presence, horizontal scaling"
+claude "@websocket-engineer Design scalable WebSocket system for collaborative document editing"
 ```
 
 **✅ Expected Output:**
 ```typescript
-// Server-side WebSocket handler with Redis pub/sub for scaling
 import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import { Redis } from 'ioredis';
@@ -1681,10 +1679,7 @@ io.on('connection', (socket) => {
 
   socket.join(`doc:${documentId}`);
 
-  socket.to(`doc:${documentId}`).emit('user:joined', {
-    userId,
-    timestamp: Date.now()
-  });
+  socket.to(`doc:${documentId}`).emit('user:joined', { userId });
 
   socket.on('cursor:move', (position) => {
     socket.to(`doc:${documentId}`).volatile.emit('cursor:update', {
@@ -1712,16 +1707,15 @@ io.on('connection', (socket) => {
 
 **📝 Input Requirements:**
 ```
-Build pipeline for:
-- Source: Kafka topic (order events)
-- Transform: Enrich with product details
-- Load: Snowflake warehouse
-- SLA: < 15 minute latency
+Source: Kafka topic (order events)
+Destination: Snowflake warehouse
+Transform: Enrich with product details
+SLA: < 15 minute latency
 ```
 
 **💻 Command:**
 ```bash
-claude -p agents/data/data-engineer.md "Build Kafka → Snowflake pipeline with product enrichment, <15min SLA"
+claude "@data-engineer Build Airflow DAG for Kafka to Snowflake pipeline with 15-min SLA"
 ```
 
 **✅ Expected Output:**
@@ -1737,14 +1731,14 @@ with DAG(
     catchup=False,
 ) as dag:
 
-    extract_events = ConsumeFromKafkaOperator(
+    extract = ConsumeFromKafkaOperator(
         task_id='extract_order_events',
         topics=['order.events'],
         max_messages=10000,
     )
 
-    transform_enrich = SnowflakeOperator(
-        task_id='transform_and_enrich',
+    load = SnowflakeOperator(
+        task_id='load_and_transform',
         sql="""
             MERGE INTO analytics.fact_orders AS target
             USING staging.order_events AS source
@@ -1753,7 +1747,7 @@ with DAG(
         """,
     )
 
-    extract_events >> transform_enrich
+    extract >> load
 ```
 
 ---
@@ -1777,18 +1771,17 @@ LIMIT 100;
 
 **💻 Command:**
 ```bash
-claude -p agents/data/sql/postgres-pro.md "Optimize: $(cat slow_query.sql)"
+claude "@postgres-pro Optimize this query that takes 30+ seconds on 10M row table"
 ```
 
 **✅ Expected Output:**
 ```sql
--- Create composite index for common query pattern
+-- Create composite partial index
 CREATE INDEX CONCURRENTLY idx_orders_status_created
 ON orders (status, created_at DESC)
 WHERE status = 'completed';
 
--- Verify with EXPLAIN ANALYZE
-EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+-- Optimized query
 SELECT o.id, o.created_at, o.total_amount,
        c.name as customer_name
 FROM orders o
@@ -1797,9 +1790,12 @@ WHERE o.status = 'completed'
   AND o.created_at > '2024-01-01'
 ORDER BY o.created_at DESC
 LIMIT 100;
+
+-- Verify improvement
+EXPLAIN (ANALYZE, BUFFERS) <query>;
 ```
 
-**Expected Improvement:** Query time reduced from 30s to <100ms.
+**Expected Improvement:** 30s → <100ms
 
 ---
 
@@ -1824,7 +1820,7 @@ def merge_sort(arr):
 
 **💻 Command:**
 ```bash
-claude -p agents/misc/code-explain.md "$(cat merge_sort.py)"
+claude "@code-explain Explain this merge sort implementation step-by-step for a beginner"
 ```
 
 **✅ Expected Output:**
@@ -1836,8 +1832,7 @@ Merge Sort is a "divide and conquer" algorithm that sorts a list by:
 1. Splitting it in half repeatedly until you have single elements
 2. Merging the pieces back together in sorted order
 
-**Key Concepts**: Recursion, Divide and Conquer
-**Difficulty Level**: Intermediate
+**Difficulty Level:** Intermediate
 
 ### Step-by-Step Execution
 
@@ -1850,8 +1845,8 @@ For input `[38, 27, 43, 3]`:
 
 ### Why It Works
 - Single elements are already sorted (base case)
-- Merging two sorted lists is efficient (O(n))
-- Guaranteed O(n log n) time complexity
+- Merging two sorted lists is O(n)
+- Total complexity: O(n log n)
 ```
 
 ---
@@ -1860,14 +1855,14 @@ For input `[38, 27, 43, 3]`:
 
 | Agent | Command | Use Case |
 |-------|---------|----------|
-| `clean-code-expert` | `claude -p agents/generic/clean-code-expert.md "$(cat file.py)"` | Refactor messy code |
-| `python-refactor` | `claude -p agents/backend/python/python-refactor.md "$(cat script.py)"` | Pythonic refactoring |
-| `docker-specialist` | `claude -p agents/generic/docker-specialist.md "Containerize Node.js app"` | Create Dockerfiles |
-| `api-designer` | `claude -p agents/generic/api-designer.md "Design users API"` | REST/GraphQL design |
-| `penetration-tester` | `claude -p agents/quality/penetration-tester.md "Test login security"` | Security testing |
-| `devops-engineer` | `claude -p agents/infrastructure/devops-engineer.md "Create CI/CD pipeline"` | Pipeline automation |
-| `postgres-pro` | `claude -p agents/data/sql/postgres-pro.md "$(cat query.sql)"` | Query optimization |
-| `code-explain` | `claude -p agents/misc/code-explain.md "$(cat algorithm.py)"` | Code explanation |
+| `clean-code-expert` | `claude "@clean-code-expert <code>"` | Refactor messy code |
+| `python-refactor` | `claude "@python-refactor <code>"` | Pythonic refactoring |
+| `docker-specialist` | `claude "@docker-specialist <dockerfile>"` | Optimize containers |
+| `api-designer` | `claude "@api-designer <requirements>"` | Design REST/GraphQL APIs |
+| `penetration-tester` | `claude "@penetration-tester <code>"` | Security analysis |
+| `devops-engineer` | `claude "@devops-engineer <requirements>"` | CI/CD pipelines |
+| `postgres-pro` | `claude "@postgres-pro <query>"` | Query optimization |
+| `code-explain` | `claude "@code-explain <code>"` | Code explanation |
 
 ---
 
