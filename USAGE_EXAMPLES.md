@@ -7,12 +7,13 @@ Comprehensive usage examples with realistic scenarios, problem statements, and t
 ## Table of Contents
 
 1. [Generic Agents](#generic-agents)
-2. [Backend Agents](#backend-agents)
-3. [Quality Agents](#quality-agents)
-4. [Infrastructure Agents](#infrastructure-agents)
-5. [Core Agents](#core-agents)
-6. [Data Agents](#data-agents)
-7. [Misc Agents](#misc-agents)
+2. [Frontend Agents](#frontend-agents)
+3. [Backend Agents](#backend-agents)
+4. [Quality Agents](#quality-agents)
+5. [Infrastructure Agents](#infrastructure-agents)
+6. [Core Agents](#core-agents)
+7. [Data Agents](#data-agents)
+8. [Misc Agents](#misc-agents)
 
 ---
 
@@ -22,7 +23,7 @@ Comprehensive usage examples with realistic scenarios, problem statements, and t
 **Profile:** Polyglot Senior Software Engineer specializing in refactoring code for Python, Java, and C++ to production-ready standards.
 
 * **Scenario:** A junior developer wrote a Python script for data processing that works but violates multiple PEP 8 guidelines and contains code smells.
-* **The Problem:** Nested conditionals, magic numbers, missing type hints, and poor naming conventions make the code hard to maintain.
+* **The Problem:** Nested conditionals, magic numbers, missing type hints, and poor naming conventions make the code hard to maintain and extend.
 
 **📝 Input Code:**
 ```python
@@ -162,7 +163,7 @@ Role: Customer Support Agent for TechStore
 **Profile:** Senior DevOps Engineer specializing in containerization with production-grade security and optimization.
 
 * **Scenario:** A Node.js application needs to be containerized for production deployment.
-* **The Problem:** Current Docker image is 1.2GB, runs as root, and has no layer caching optimization.
+* **The Problem:** Current Docker image is 1.2GB (too large), runs as root (security risk), and has no layer caching optimization (slow builds).
 
 **📝 Input Dockerfile:**
 ```dockerfile
@@ -211,7 +212,7 @@ CMD ["node", "server.js"]
 **Profile:** Senior API architect designing scalable, developer-friendly REST and GraphQL interfaces.
 
 * **Scenario:** Designing a REST API for an e-commerce order management system.
-* **The Problem:** Need consistent pagination, proper error handling, and versioning strategy.
+* **The Problem:** Need consistent pagination, proper error handling, versioning strategy, and rate limiting for API stability.
 
 **📝 Input Requirements:**
 ```
@@ -667,6 +668,342 @@ jobs:
 ```
 
 **Expected Improvement:** Build time reduced from 45 min to ~8 min.
+
+---
+
+## Frontend Agents
+
+### javascript-pro.md
+**Profile:** Expert JavaScript developer specializing in modern ES2023+ features, asynchronous programming, and full-stack development.
+
+* **Scenario:** Refactoring callback-based code to modern async/await with proper error handling.
+* **The Problem:** Legacy code uses nested callbacks (callback hell) making it hard to maintain and debug.
+
+**📝 Input Code:**
+```javascript
+function getUserData(userId, callback) {
+    fetchUser(userId, function(err, user) {
+        if (err) return callback(err);
+        fetchProfile(user.id, function(err, profile) {
+            if (err) return callback(err);
+            fetchPosts(user.id, function(err, posts) {
+                if (err) return callback(err);
+                callback(null, { user, profile, posts });
+            });
+        });
+    });
+}
+```
+
+**💻 Command:**
+```bash
+claude "@javascript-pro Refactor this callback-based code to async/await with proper error handling"
+```
+
+**✅ Expected Output:**
+```javascript
+/**
+ * Fetches complete user data including profile and posts
+ * @param {string} userId - The user identifier
+ * @returns {Promise<{user: User, profile: Profile, posts: Post[]}>}
+ * @throws {Error} When user data cannot be retrieved
+ */
+async function getUserData(userId) {
+    try {
+        const user = await fetchUser(userId);
+        const [profile, posts] = await Promise.all([
+            fetchProfile(user.id),
+            fetchPosts(user.id)
+        ]);
+
+        return { user, profile, posts };
+    } catch (error) {
+        console.error(`Failed to fetch data for user ${userId}:`, error);
+        throw new Error(`User data retrieval failed: ${error.message}`);
+    }
+}
+```
+
+---
+
+### react-specialist.md
+**Profile:** Expert React specialist mastering React 18+ with modern patterns and production-ready architectures.
+
+* **Scenario:** Optimizing a slow component that re-renders unnecessarily.
+* **The Problem:** Product list component re-renders on every parent update, causing performance issues.
+
+**📝 Input Code:**
+```jsx
+function ProductList({ products, onAddToCart }) {
+    return (
+        <div>
+            {products.map(product => (
+                <div key={product.id}>
+                    <h3>{product.name}</h3>
+                    <p>${product.price}</p>
+                    <button onClick={() => onAddToCart(product)}>
+                        Add to Cart
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+```
+
+**💻 Command:**
+```bash
+claude "@react-specialist Optimize this component to prevent unnecessary re-renders"
+```
+
+**✅ Expected Output:**
+```jsx
+import { memo, useCallback } from 'react';
+
+const ProductItem = memo(({ product, onAddToCart }) => {
+    const handleClick = useCallback(() => {
+        onAddToCart(product);
+    }, [product, onAddToCart]);
+
+    return (
+        <div className="product-item">
+            <h3>{product.name}</h3>
+            <p>${product.price.toFixed(2)}</p>
+            <button onClick={handleClick} aria-label={`Add ${product.name} to cart`}>
+                Add to Cart
+            </button>
+        </div>
+    );
+});
+
+ProductItem.displayName = 'ProductItem';
+
+export const ProductList = memo(({ products, onAddToCart }) => {
+    return (
+        <div className="product-list" role="list">
+            {products.map(product => (
+                <ProductItem
+                    key={product.id}
+                    product={product}
+                    onAddToCart={onAddToCart}
+                />
+            ))}
+        </div>
+    );
+});
+
+ProductList.displayName = 'ProductList';
+```
+
+---
+
+### vue-expert.md
+**Profile:** Expert Vue specialist mastering Vue 3 with Composition API and Nuxt 3 development.
+
+* **Scenario:** Migrating Options API component to Composition API with improved reactivity.
+* **The Problem:** Legacy Options API component needs modernization to Vue 3 standards.
+
+**📝 Input Code:**
+```vue
+<script>
+export default {
+    data() {
+        return {
+            users: [],
+            loading: false,
+            searchTerm: ''
+        }
+    },
+    computed: {
+        filteredUsers() {
+            return this.users.filter(u =>
+                u.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+            );
+        }
+    },
+    methods: {
+        async fetchUsers() {
+            this.loading = true;
+            const response = await fetch('/api/users');
+            this.users = await response.json();
+            this.loading = false;
+        }
+    },
+    mounted() {
+        this.fetchUsers();
+    }
+}
+</script>
+```
+
+**💻 Command:**
+```bash
+claude "@vue-expert Migrate this Options API component to Composition API with TypeScript"
+```
+
+**✅ Expected Output:**
+```vue
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+const users = ref<User[]>([]);
+const loading = ref(false);
+const searchTerm = ref('');
+
+const filteredUsers = computed(() =>
+    users.value.filter(user =>
+        user.name.toLowerCase().includes(searchTerm.value.toLowerCase())
+    )
+);
+
+async function fetchUsers() {
+    loading.value = true;
+    try {
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('Failed to fetch users');
+        users.value = await response.json();
+    } catch (error) {
+        console.error('Error fetching users:', error);
+    } finally {
+        loading.value = false;
+    }
+}
+
+onMounted(() => {
+    fetchUsers();
+});
+</script>
+
+<template>
+    <div>
+        <input
+            v-model="searchTerm"
+            type="search"
+            placeholder="Search users..."
+            aria-label="Search users"
+        />
+        <div v-if="loading">Loading...</div>
+        <ul v-else>
+            <li v-for="user in filteredUsers" :key="user.id">
+                {{ user.name }}
+            </li>
+        </ul>
+    </div>
+</template>
+```
+
+---
+
+### ui-designer.md
+**Profile:** Expert visual designer specializing in creating intuitive, beautiful, and accessible user interfaces.
+
+* **Scenario:** Designing a design system for a multi-product company.
+* **The Problem:** Inconsistent UI across products, no shared components, and accessibility gaps.
+
+**📝 Input Requirements:**
+```
+Products: 3 web apps, 2 mobile apps
+Brand: Modern SaaS, professional
+Users: B2B professionals
+Needs: Consistency, accessibility (WCAG 2.1 AA), dark mode
+```
+
+**💻 Command:**
+```bash
+claude "@ui-designer Create design system foundation with tokens, components, and accessibility guidelines"
+```
+
+**✅ Expected Output:**
+```css
+/* Design Tokens - tokens.css */
+:root {
+    /* Color Palette - Light Mode */
+    --color-primary: #3B82F6;
+    --color-primary-hover: #2563EB;
+    --color-secondary: #8B5CF6;
+    --color-surface: #FFFFFF;
+    --color-background: #F9FAFB;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6B7280;
+    --color-border: #E5E7EB;
+
+    /* Typography */
+    --font-family-sans: 'Inter', system-ui, sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+
+    /* Border Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+    --color-surface: #1F2937;
+    --color-background: #111827;
+    --color-text-primary: #F9FAFB;
+    --color-text-secondary: #D1D5DB;
+    --color-border: #374151;
+}
+
+/* Button Component */
+.btn {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+```
+
+**Deliverables:**
+- Design tokens (colors, typography, spacing)
+- Component library (buttons, inputs, cards, etc.)
+- Accessibility annotations (ARIA, keyboard navigation)
+- Dark mode variants
+- Usage documentation
 
 ---
 
@@ -1166,6 +1503,214 @@ sub process_logs {
 ---
 
 ## Quality Agents
+
+### performance-engineer.md
+**Profile:** Expert performance engineer specializing in system optimization, bottleneck identification, and scalability engineering.
+
+* **Scenario:** API endpoint is slow under load, taking 2.1 seconds to respond.
+* **The Problem:** Database N+1 queries and missing indexes causing performance degradation.
+
+**📝 Input Code:**
+```javascript
+app.get('/api/orders', async (req, res) => {
+    const orders = await Order.findAll();
+    const result = [];
+
+    for (const order of orders) {
+        const customer = await Customer.findById(order.customerId);
+        const items = await OrderItem.findAll({ orderId: order.id });
+        result.push({ order, customer, items });
+    }
+
+    res.json(result);
+});
+```
+
+**💻 Command:**
+```bash
+claude "@performance-engineer Optimize this endpoint: current response time 2.1s, target <200ms"
+```
+
+**✅ Expected Output:**
+```javascript
+const { Order, Customer, OrderItem } = require('./models');
+
+// Optimized with eager loading and proper indexing
+app.get('/api/orders', async (req, res) => {
+    try {
+        const orders = await Order.findAll({
+            include: [
+                {
+                    model: Customer,
+                    attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: OrderItem,
+                    attributes: ['id', 'productId', 'quantity', 'price']
+                }
+            ],
+            order: [['createdAt', 'DESC']],
+            limit: 100 // Pagination
+        });
+
+        res.json(orders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Required indexes (migration file):
+// CREATE INDEX idx_orders_customer_id ON orders(customer_id);
+// CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+// CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+```
+
+**Performance Improvements:**
+- Response time: 2.1s → 67ms (97% improvement)
+- Database queries: 201 → 1 (eliminated N+1 problem)
+- Memory usage: Reduced by 40%
+- Throughput: 10 RPS → 450 RPS
+
+---
+
+### test-automator.md
+**Profile:** Expert test automation engineer building robust test frameworks with comprehensive coverage.
+
+* **Scenario:** Manual regression testing takes 3 days before each release.
+* **The Problem:** No automated tests, blocking frequent deployments and causing missed bugs.
+
+**📝 Input Requirements:**
+```
+Application: E-commerce checkout flow
+Tech stack: Node.js + React
+Current: 100% manual testing
+Target: 80% automation coverage, <30 min execution
+```
+
+**💻 Command:**
+```bash
+claude "@test-automator Design test automation strategy for checkout flow: cart, payment, confirmation"
+```
+
+**✅ Expected Output:**
+
+**Test Framework Structure:**
+```javascript
+// tests/e2e/checkout.spec.js
+import { test, expect } from '@playwright/test';
+import { CheckoutPage } from '../pages/CheckoutPage';
+import { CartPage } from '../pages/CartPage';
+import { TestDataFactory } from '../utils/TestDataFactory';
+
+test.describe('Checkout Flow', () => {
+    let checkoutPage: CheckoutPage;
+    let cartPage: CartPage;
+
+    test.beforeEach(async ({ page }) => {
+        checkoutPage = new CheckoutPage(page);
+        cartPage = new CartPage(page);
+        await page.goto('/');
+    });
+
+    test('should complete successful checkout with valid payment', async ({ page }) => {
+        // Arrange
+        const testUser = TestDataFactory.createUser();
+        const testProduct = TestDataFactory.createProduct();
+
+        // Act
+        await cartPage.addProduct(testProduct);
+        await cartPage.proceedToCheckout();
+        await checkoutPage.fillShippingInfo(testUser.address);
+        await checkoutPage.selectPaymentMethod('credit-card');
+        await checkoutPage.fillPaymentInfo({
+            cardNumber: '4242424242424242',
+            expiry: '12/25',
+            cvc: '123'
+        });
+        await checkoutPage.submitOrder();
+
+        // Assert
+        await expect(page).toHaveURL(/\/order-confirmation/);
+        await expect(page.locator('[data-testid="success-message"]'))
+            .toContainText('Order placed successfully');
+        await expect(page.locator('[data-testid="order-number"]'))
+            .toBeVisible();
+    });
+
+    test('should show validation errors for invalid payment info', async ({ page }) => {
+        const testUser = TestDataFactory.createUser();
+
+        await cartPage.addProduct(TestDataFactory.createProduct());
+        await cartPage.proceedToCheckout();
+        await checkoutPage.fillShippingInfo(testUser.address);
+        await checkoutPage.selectPaymentMethod('credit-card');
+        await checkoutPage.fillPaymentInfo({
+            cardNumber: '1111',
+            expiry: '01/20',
+            cvc: '1'
+        });
+        await checkoutPage.submitOrder();
+
+        await expect(page.locator('[data-testid="error-invalid-card"]'))
+            .toBeVisible();
+    });
+
+    test('should handle payment gateway timeout gracefully', async ({ page }) => {
+        // Mock network delay
+        await page.route('**/api/payment', route =>
+            route.abort('timedout')
+        );
+
+        await cartPage.addProduct(TestDataFactory.createProduct());
+        await cartPage.proceedToCheckout();
+        // ... complete checkout flow
+
+        await expect(page.locator('[data-testid="error-timeout"]'))
+            .toContainText('Payment processing timed out');
+    });
+});
+```
+
+**CI/CD Integration:**
+```yaml
+# .github/workflows/test.yml
+name: E2E Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e -- --project=${{ matrix.browser }}
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: test-results
+          path: test-results/
+```
+
+**Results Delivered:**
+- Test coverage: 0% → 83%
+- Execution time: 3 days → 27 minutes
+- Parallel execution: 5 browsers simultaneously
+- Regression bugs caught: 15 before production
+- Deployment frequency: Monthly → Daily
+
+---
 
 ### penetration-tester.md
 **Profile:** Senior penetration tester specializing in ethical hacking and vulnerability assessment.
@@ -1755,8 +2300,8 @@ with DAG(
 ### postgres-pro.md
 **Profile:** Senior PostgreSQL expert mastering database administration and performance optimization.
 
-* **Scenario:** Optimizing a slow query on a large orders table.
-* **The Problem:** Query takes 30+ seconds due to missing indexes and suboptimal execution plan.
+* **Scenario:** Optimizing a slow query on a large orders table (10M rows).
+* **The Problem:** Query takes 30+ seconds to execute due to missing indexes, suboptimal execution plan, and sequential scans.
 
 **📝 Input Query:**
 ```sql
@@ -1804,8 +2349,8 @@ EXPLAIN (ANALYZE, BUFFERS) <query>;
 ### code-explain.md
 **Profile:** Code education expert explaining complex code through clear narratives and visual diagrams.
 
-* **Scenario:** Explaining a complex recursive algorithm to a junior developer.
-* **The Problem:** The developer doesn't understand how the recursion unfolds.
+* **Scenario:** Explaining a complex recursive algorithm to a junior developer who is new to recursion.
+* **The Problem:** The developer doesn't understand how the recursion unfolds step-by-step and why it's more efficient than iterative approaches.
 
 **📝 Input Code:**
 ```python
@@ -1855,13 +2400,38 @@ For input `[38, 27, 43, 3]`:
 
 | Agent | Command | Use Case |
 |-------|---------|----------|
+| **Generic** | | |
 | `clean-code-expert` | `claude "@clean-code-expert <code>"` | Refactor messy code |
-| `python-refactor` | `claude "@python-refactor <code>"` | Pythonic refactoring |
+| `legacy-modernizer` | `claude "@legacy-modernizer <code>"` | Modernize legacy systems |
+| `prompt-engineer` | `claude "@prompt-engineer <prompt>"` | Optimize LLM prompts |
 | `docker-specialist` | `claude "@docker-specialist <dockerfile>"` | Optimize containers |
 | `api-designer` | `claude "@api-designer <requirements>"` | Design REST/GraphQL APIs |
+| **Frontend** | | |
+| `javascript-pro` | `claude "@javascript-pro <code>"` | Modern JavaScript/Node.js |
+| `react-specialist` | `claude "@react-specialist <code>"` | React 18+ optimization |
+| `vue-expert` | `claude "@vue-expert <code>"` | Vue 3 Composition API |
+| `ui-designer` | `claude "@ui-designer <requirements>"` | Design systems & UI |
+| **Backend** | | |
+| `python-refactor` | `claude "@python-refactor <code>"` | Pythonic refactoring |
+| `python-optimizer` | `claude "@python-optimizer <code>"` | Python performance |
+| `java-optimizer` | `claude "@java-optimizer <code>"` | Java performance tuning |
+| `spring-boot-engineer` | `claude "@spring-boot-engineer <code>"` | Spring Boot development |
+| `golang-pro` | `claude "@golang-pro <code>"` | Go concurrent systems |
+| `laravel-specialist` | `claude "@laravel-specialist <code>"` | Laravel applications |
+| **Quality** | | |
+| `performance-engineer` | `claude "@performance-engineer <code>"` | Performance optimization |
+| `test-automator` | `claude "@test-automator <requirements>"` | Test automation |
 | `penetration-tester` | `claude "@penetration-tester <code>"` | Security analysis |
+| `chaos-engineer` | `claude "@chaos-engineer <requirements>"` | Chaos engineering |
+| **Infrastructure** | | |
 | `devops-engineer` | `claude "@devops-engineer <requirements>"` | CI/CD pipelines |
+| `deployment-engineer` | `claude "@deployment-engineer <requirements>"` | Zero-downtime deploys |
+| `git-workflow-manager` | `claude "@git-workflow-manager <context>"` | Git workflows |
+| `build-engineer` | `claude "@build-engineer <config>"` | Build optimization |
+| **Data** | | |
 | `postgres-pro` | `claude "@postgres-pro <query>"` | Query optimization |
+| `data-engineer` | `claude "@data-engineer <requirements>"` | Data pipelines |
+| **Misc** | | |
 | `code-explain` | `claude "@code-explain <code>"` | Code explanation |
 
 ---
